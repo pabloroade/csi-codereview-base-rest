@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.udc.fic.csi2122.baserest.conversors.UserConversors;
-import es.udc.fic.csi2122.baserest.dto.UserDto;
-import es.udc.fic.csi2122.baserest.entity.User;
-import es.udc.fic.csi2122.baserest.repository.UserRepository;
+import es.udc.fic.csi2122.baserest.conversors.ClientConversors;
+import es.udc.fic.csi2122.baserest.dto.ClientDto;
+import es.udc.fic.csi2122.baserest.entity.Client;
+import es.udc.fic.csi2122.baserest.repository.ClientRepository;
 
 /**
  * Example spring REST controller
@@ -37,7 +37,7 @@ import es.udc.fic.csi2122.baserest.repository.UserRepository;
  */
 @RestController
 @Transactional
-@RequestMapping("user")
+@RequestMapping("client")
 public class BaseRestController {
 
   private static final Logger logger = LoggerFactory.getLogger(BaseRestController.class);
@@ -45,96 +45,96 @@ public class BaseRestController {
   @PersistenceContext
   private EntityManager em;
 
-  private UserRepository userRepository;
+  private ClientRepository clientRepository;
 
   /**
    * Constructor dependency injection signaled by the {@link Autowired} annotation
    * 
-   * @param userRepository the user repository
+   * @param clientRepository the client repository
    */
   @Autowired
-  public BaseRestController(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  public BaseRestController(ClientRepository clientRepository) {
+    this.clientRepository = clientRepository;
   }
 
   /**
-   * Get all users
+   * Get all clients
    * 
-   * @return a list of all the users
+   * @return a list of all the clients
    */
   @GetMapping(value = "all")
-  public List<UserDto> getUsers() {
-    return UserConversors.toUserDtoList(userRepository.findAll());
+  public List<ClientDto> getClients() {
+    return ClientConversors.toClientDtoList(clientRepository.findAll());
   }
 
   /**
-   * Get user by id
+   * Get client by id
    * 
    * The ResponseEntity.of static method will return a 404 response if the
-   * Optional&lt;User&gt; is empty.
+   * Optional&lt;Client&gt; is empty.
    * 
-   * @param id the id of the user
-   * @return the user or not found
+   * @param id the id of the client
+   * @return the client or not found
    */
   @GetMapping(value = "{id}")
-  public ResponseEntity<UserDto> get(@PathVariable Long id) {
-    logger.info("Fetching user with id: {}", id);
-    var user = userRepository.findById(id);
+  public ResponseEntity<ClientDto> get(@PathVariable Long id) {
+    logger.info("Fetching client with id: {}", id);
+    var client = clientRepository.findById(id);
 
-    return ResponseEntity.of(user.map(u -> {
-      logger.info("Found user with id {}: {}", id, u);
-      return UserConversors.toUserDto(u);
+    return ResponseEntity.of(client.map(u -> {
+      logger.info("Found client with id {}: {}", id, u);
+      return ClientConversors.toClientDto(u);
     }));
   }
 
   /**
-   * Create a new user
+   * Create a new client
    * 
    * We use the JPA EntityManager to do the operation. Errors during this
    * operation are not handled and will results in an exceptions thrown and a 500
    * Internal Server Error response
    * 
-   * Alternatively we could use the save() method of the UserRepository.
+   * Alternatively we could use the save() method of the ClientRepository.
    * 
-   * @param user the new user
-   * @return the id of the new user
+   * @param client the new client
+   * @return the id of the new client
    */
   @PostMapping(value = "new")
-  public Long newUser(@RequestBody UserDto user) {
-    logger.info("Creating new user: {}", user);
-    var newUser = em.merge(UserConversors.toUser(user));
-    logger.info("Created user: {}", newUser);
-    return newUser.getId();
+  public Long newClient(@RequestBody ClientDto client) {
+    logger.info("Creating new client: {}", client);
+    var newClient = em.merge(ClientConversors.toClient(client));
+    logger.info("Created client: {}", newClient);
+    return newClient.getId();
   }
 
   /**
-   * Search users
+   * Search clients
    * 
    * Parameters are optional, but at least one is required. sIf no query parameter
    * is provided a 400 Bad Response is issued.
    * 
-   * @param name      the name of the user
+   * @param name      the name of the client
    * @param olderThan the minimum age
-   * @return a list of users
+   * @return a list of clients
    */
   @GetMapping(value = "search")
-  public ResponseEntity<List<UserDto>> search(@RequestParam Optional<String> name,
+  public ResponseEntity<List<ClientDto>> search(@RequestParam Optional<String> name,
       @RequestParam(name = "older-than") Optional<Integer> olderThan) {
 
-    final List<User> users;
+    final List<Client> clients;
 
     if (name.isEmpty() && olderThan.isEmpty()) {
       return ResponseEntity.badRequest().build();
     } else if (name.isPresent() && olderThan.isEmpty()) {
-      users = userRepository.findOneByName(name.get())
+      clients = clientRepository.findOneByName(name.get())
           .map(Arrays::asList)
           .orElseGet(Arrays::asList);
     } else if (name.isEmpty()) {
-      users = userRepository.findByAgeGreaterThan(olderThan.get());
+      clients = clientRepository.findByAgeGreaterThan(olderThan.get());
     } else {
-      users = userRepository.findByNameAndAgeGreaterThan(name.get(), olderThan.get());
+      clients = clientRepository.findByNameAndAgeGreaterThan(name.get(), olderThan.get());
     }
 
-    return ResponseEntity.ok(UserConversors.toUserDtoList(users));
+    return ResponseEntity.ok(ClientConversors.toClientDtoList(clients));
   }
 }
